@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+@CrossOrigin(origins = "*")
 @Tag(name = "Autenticacao", description = "Login, registro e refresh de tokens JWT")
 @RestController
 @RequestMapping("/api/v1/auth")

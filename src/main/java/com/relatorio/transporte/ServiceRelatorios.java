@@ -36,10 +36,12 @@ public class ServiceRelatorios {
 
     public Page<ConhecimentoProjection> buscarPaginado(int pagina) {
         Pageable pageable = PageRequest.of(pagina, 100, Sort.by("conhecimento").descending());
-        return repository.buscarConhecimentos(TODAS_FILIAIS, 60, List.of(22, 5), 7, pageable);
+        return repository.buscarConhecimentos(TODAS_FILIAIS, 60, List.of(22, 5), 7,null, pageable);
     }
-
-    public ResultadoBanco buscarNoBanco(String filial, int page, Integer size) {
+    @Cacheable(
+            value = "conhecimentos",
+            key = "(#filial ?: 'todas') + '_' + #page + '_' + #size + '_' + (#placa ?: 'todas')"
+    )    public ResultadoBanco buscarNoBanco(String filial, int page, Integer size,String placa) {
         long inicio = System.currentTimeMillis();
 
         List<String> filiais = (filial == null || filial.isBlank()) ? TODAS_FILIAIS : List.of(filial);
@@ -50,8 +52,10 @@ public class ServiceRelatorios {
                 : PageRequest.of(page, size, sort);
 
         log.info("Iniciando consulta SQL Server: filiais={} dias={} pageable={}", filiais, 60, pageable);
+        String placaFiltro = (placa == null || placa.isBlank()) ? null : placa;
+        System.out.println("Placa do veiculo "+placaFiltro);
 
-        Page<ConhecimentoProjection> resultado = repository.buscarConhecimentos(filiais, 60, List.of(22, 5), 7, pageable);
+        Page<ConhecimentoProjection> resultado = repository.buscarConhecimentos(filiais, 60, List.of(22, 5), 7,placaFiltro, pageable);
 
         long tempoBanco = System.currentTimeMillis() - inicio;
         log.info("Consulta concluida em {}ms. Linhas retornadas={}, totalElements={}",
@@ -67,7 +71,7 @@ public class ServiceRelatorios {
     public List<PlacaRanking> top20PioresPlacas(FiltroRanking filtro) {
         Pageable pageable = Pageable.unpaged(Sort.by(Sort.Direction.DESC, "CP04_ID"));
         Page<ConhecimentoProjection> page = repository.buscarConhecimentos(
-                TODAS_FILIAIS, slaDiasBusca, List.of(22, 5), 7, pageable);
+                TODAS_FILIAIS, slaDiasBusca, List.of(22, 5), 7,null, pageable);
 
         long thresholdSec = Duration.ofHours(slaThresholdHours).getSeconds();
 
@@ -167,7 +171,7 @@ public class ServiceRelatorios {
 
         Pageable pageable = Pageable.unpaged(Sort.by(Sort.Direction.DESC, "CP04_ID"));
         Page<ConhecimentoProjection> page = repository.buscarConhecimentos(
-                TODAS_FILIAIS, slaDiasBusca, List.of(22, 5), 7, pageable);
+                TODAS_FILIAIS, slaDiasBusca, List.of(22, 5), 7,null, pageable);
 
         return page.getContent().stream()
                 .filter(p -> matchConhecimento(p, conhecimento))

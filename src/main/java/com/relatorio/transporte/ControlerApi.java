@@ -33,8 +33,9 @@ public class ControlerApi {
     public ServiceRelatorios.ResultadoBanco listarTodos(
             @Parameter(description = "Codigo da filial (ex: 87). Vazio = todas as filiais") @RequestParam(value = "filial", required = false) String filial,
             @Parameter(description = "Numero da pagina (0-based)") @RequestParam(defaultValue = "0") int page,
+            @RequestParam(value = "placa",required = false) String placa,
             @Parameter(description = "Tamanho da pagina. Sem valor traz tudo (com teto)") @RequestParam(value = "size", required = false) Integer size) {
-        return serviceRelatorios.buscarNoBanco(filial, page, size);
+        return serviceRelatorios.buscarNoBanco(filial, page, size,placa);
     }
 
     @Operation(summary = "Top 20 piores placas com SLA vencido",

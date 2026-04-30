@@ -89,6 +89,7 @@ public interface ConhecimentoRepository extends Repository<ConhecimentoEntity, I
         AND CONH1.CP04_ID_FILIAL IN :filiais
         AND CONH1.CP04_STATUS IN :status
         AND CONH1.CP04_ID_TIPO = :tipo
+        AND (:placa IS NULL OR CONH1.CP04_PLACA_VEICULO = :placa)
     """,
             countQuery = """
     SELECT COUNT_BIG(1)
@@ -97,10 +98,18 @@ public interface ConhecimentoRepository extends Repository<ConhecimentoEntity, I
         AND CONH1.CP04_ID_FILIAL IN :filiais
         AND CONH1.CP04_STATUS IN :status
         AND CONH1.CP04_ID_TIPO = :tipo
-        AND EXISTS (SELECT 1 FROM CADASTRO..CD94_VEICULO VEIC WITH(NOLOCK)
-                    WHERE VEIC.CD94_ID = CONH1.CP04_ID_VEICULO AND VEIC.CD94_ATIVO = 1 AND VEIC.CD94_CLASSIFICACAO <> 3)
-        AND EXISTS (SELECT 1 FROM CADASTRO..CD93_MOTORISTA MOTO WITH(NOLOCK)
-                    WHERE MOTO.CD93_ID = CONH1.CP04_ID_MOTORISTA AND MOTO.CD93_ATIVO = 1)
+        AND (:placa IS NULL OR CONH1.CP04_PLACA_VEICULO = :placa)
+        AND EXISTS (
+            SELECT 1 FROM CADASTRO..CD94_VEICULO VEIC WITH(NOLOCK)
+            WHERE VEIC.CD94_ID = CONH1.CP04_ID_VEICULO
+              AND VEIC.CD94_ATIVO = 1
+              AND VEIC.CD94_CLASSIFICACAO <> 3
+        )
+        AND EXISTS (
+            SELECT 1 FROM CADASTRO..CD93_MOTORISTA MOTO WITH(NOLOCK)
+            WHERE MOTO.CD93_ID = CONH1.CP04_ID_MOTORISTA
+              AND MOTO.CD93_ATIVO = 1
+        )
     """,
             nativeQuery = true)
     Page<ConhecimentoProjection> buscarConhecimentos(
@@ -108,6 +117,7 @@ public interface ConhecimentoRepository extends Repository<ConhecimentoEntity, I
             @Param("dias") int dias,
             @Param("status") List<Integer> status,
             @Param("tipo") int tipo,
+            @Param("placa") String placa,
             Pageable pageable
     );
 }
